@@ -1,0 +1,49 @@
+h4 {
+	margin-bottom: 0;
+	line-height: 1;
+}
+.form-group {
+    margin-bottom: .5rem;
+}
+.card {
+    margin-top: 1.5rem;
+    background-color: #f8f9fa;
+}
+.card-header {
+    font-size: 20px;
+    line-height: 20px;
+    display: flex;
+}
+.text-muted {
+	font-size: smaller;
+	min-width: max-content;
+	text-align: right;
+	flex-grow: 1;
+}
+.edit-buttons {
+	display: flex;
+	gap: 0.5rem;
+	position: absolute;
+	right: 1.25rem;
+	bottom: 1.25rem;
+}
+.page-link:focus {
+	box-shadow: none;
+}
+.card-header p {
+	margin-bottom: 0
+}
+.username:hover {
+	cursor: pointer;
+	text-decoration: underline;
+}
+.profile {
+	display: flex;
+	align-items: center;
+	font-family: Georgia, serif;
+}
+.follow-data {
+	font-size: 18px;
+	flex-grow: 1;
+	text-align: right;
+}
