@@ -13,26 +13,20 @@ def index(request):
 
 def posts(request):
     user = request.user
+    follow = request.GET.get('following')
     username = request.GET.get('profile')
-    following = request.GET.get('following')
 
     if username:
-        user_ = User.objects.get(username=username)
-        posts = Post.objects.order_by("-timestamp").filter(user=user_)
-    elif following == 'true':
-        if user.is_authenticated:
-            following = user.following.all()
-            posts = Post.objects.order_by("-timestamp").filter(user__in=following)
-        else:
-            return JsonResponse({"error": "You are not authenticated !"}, status=400)
+        posts = Post.objects.order_by("-timestamp").filter(user=User.objects.get(username=username))
+    elif follow and user.is_authenticated:
+        posts = Post.objects.order_by("-timestamp").filter(user__in=user.following.all())
     else:
         posts = Post.objects.order_by("-timestamp").all()
 
     pages = Paginator(posts, 10)
     num = request.GET.get('page')
     obj = pages.page(num)
-    page = {'previous': obj.has_previous(), 'next': obj.has_next(),
-            'number': obj.number, 'loged': user.is_authenticated }
+    page = {'previous': obj.has_previous(), 'next': obj.has_next(), 'number': obj.number, 'loged': user.is_authenticated }
     data = []
     for post in obj:
         save = post.serialize()
