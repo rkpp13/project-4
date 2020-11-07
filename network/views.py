@@ -89,23 +89,19 @@ def register(request):
 def new(request):
     if request.method == "GET":
         return JsonResponse({"logged": request.user.is_authenticated})
-
     if request.method == "POST":
-        body = json.loads(request.body)["body"].strip()
-        if body:
+        data = json.loads(request.body)
+        if body := data["body"].strip():
             Post.objects.create(user=request.user,content=body)
             return JsonResponse({"message": "Post created successfully."}, status=201)
-
     return JsonResponse({"error": "Bad Request"}, status=400)
-
 
 def like(request):
     if request.user.is_authenticated:
         if request.method == "PUT":
             data = json.loads(request.body)
-            like = data["like"]
             post = Post.objects.get(id=data["id"])
-            if like:
+            if data["like"]:
                 post.likes.remove(request.user)
                 message = "Unliked"
             else:
@@ -114,11 +110,9 @@ def like(request):
             return JsonResponse({"message": message, "count": post.likes.count()}, status=202)
     return JsonResponse({"error": "Bad Request"}, status=400)
 
-
 def edit(request):
     if request.method == "POST":
         data = json.loads(request.body)
-        body = data["body"].strip()
         post = Post.objects.get(id=data["id"])
         if request.user == post.user:
             if body := data["body"].strip():
