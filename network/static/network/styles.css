@@ -2,9 +2,6 @@ h4 {
 	margin-bottom: 0;
 	line-height: 1;
 }
-.form-group {
-    margin-bottom: .5rem;
-}
 .card {
     margin-top: 1.5rem;
     background-color: #f8f9fa;
@@ -16,7 +13,6 @@ h4 {
 }
 .text-muted {
 	font-size: smaller;
-	min-width: max-content;
 	text-align: right;
 	flex-grow: 1;
 }

@@ -1,7 +1,9 @@
 const csrftoken = Cookies.get('csrftoken')
 
 document.addEventListener('DOMContentLoaded', () => {
-  new_post()
+  fetch('/new').then(response => response.json()).then(result => {
+    if (result.logged) new_post()
+  })
   load_posts()
 })
 
@@ -11,13 +13,13 @@ function load_posts(number = 1, username = '', following = '') {
 
   if (username) {
     document.getElementById('profile').style.display = 'block'
-    document.getElementById('new').style.display = 'none'
+    document.getElementById('newpost').style.display = 'none'
   } else if (following) {
     document.getElementById('profile').style.display = 'none'
-    document.getElementById('new').style.display = 'none'
+    document.getElementById('newpost').style.display = 'none'
   } else {
     document.getElementById('profile').style.display = 'none'
-    document.getElementById('new').style.display = 'block'
+    document.getElementById('newpost').style.display = 'block'
   }
 
   fetch(`/posts?profile=${username}&following=${following}&page=${number}`).then(response => response.json()).then(data => {
@@ -37,8 +39,8 @@ function load_posts(number = 1, username = '', following = '') {
       like.className = post.like ? 'btn btn-primary' : 'btn btn-outline-primary'
       like.innerHTML = `<i class="fa fa-thumbs-up" aria-hidden="true">${post.count}</i>`
       head.innerHTML = `<div class="text-muted">${post.timestamp}</div>`
+      text.innerHTML = post.content.replace(/(?:\r\n|\n)/g, '<br>')
       user.innerHTML = `@${post.user}`
-      text.innerHTML = post.content
       body.dataset.id = post.id
       like.dataset.like = post.like
       head.prepend(user)
@@ -49,7 +51,7 @@ function load_posts(number = 1, username = '', following = '') {
         user.onclick = () => profile(user.textContent.slice(1))
       }
 
-      if (data[1].loged) {
+      if (data[1].logged) {
         like.onclick = () => like_(like)
         if (post.author) {
           const div = document.createElement("div")
@@ -94,29 +96,41 @@ function paginate(page, username, following) {
 }
 
 function new_post() {
-  if (document.getElementById('body')) {
-    body = document.getElementById('body')
+  const textarea = document.createElement("textarea")
+  const button = document.createElement("button")
+  const card = document.createElement("div")
+  const body = document.createElement("div")
+  const h5 = document.createElement("h5")
 
-    document.querySelector('form').onsubmit = () => {
-      const request = new Request(
-        '/new',
-        {
-          method: 'POST',
-          mode: 'same-origin',
-          body: JSON.stringify({ body: body.value }),
-          headers: { 'X-CSRFToken': csrftoken },
-        }
-      )
-      fetch(request).then(response => response.json()).then(result => {
-        console.log(result)
-        if (result.message) {
-          body.value = ''
-          load_posts()
-        }
-      })
-      return false
-    }
+  textarea.className = 'form-control mb-2'
+  button.textContent = 'Post'
+  button.className = 'btn btn-primary'
+  h5.textContent = 'New Post'
+  body.className = 'card-body'
+  card.className = 'card'
+
+  button.onclick = () => {
+    const request = new Request(
+      '/new',
+      {
+        method: 'POST',
+        mode: 'same-origin',
+        body: JSON.stringify({ body: textarea.value }),
+        headers: { 'X-CSRFToken': csrftoken },
+      }
+    )
+    fetch(request).then(response => response.json()).then(result => {
+      console.log(result)
+      if (result.message) {
+        textarea.value = ''
+        load_posts()
+      }
+    })
   }
+
+  body.append(h5, textarea, button)
+  card.append(body)
+  document.getElementById('newpost').append(card)
 }
 
 function like_(button) {
@@ -155,7 +169,7 @@ function edit_(button) {
   const post = body.firstElementChild
   const id = body.dataset.id
 
-  textarea.classList.add('form-control', 'mb-3')
+  textarea.classList.add('form-control', 'mb-2')
   textarea.value = post.textContent
   body.replaceChild(textarea, post)
 
@@ -229,7 +243,7 @@ function profile(username) {
     data.textContent = `Followers ${result.followers} || Following ${result.following}`
     body.append(user, data)
 
-    if (result.valid) {
+    if (result.logged && !result.holder) {
       const follow = document.createElement('button')
       follow.style.marginLeft = '13px'
       if (result.follow) {

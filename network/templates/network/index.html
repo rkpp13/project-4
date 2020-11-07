@@ -2,22 +2,7 @@
 {% load static %}
 
 {% block body %}
-    <div id="new">
-    {% if user.is_authenticated %}
-        <div class="card">
-            <div class="card-body">
-                <h5>New Post</h5>
-                <form>
-                    <div class="form-group">
-                        <textarea class="form-control" id="body"></textarea>
-                    </div>
-                    <input type="submit" class="btn btn-primary" value="Post" />
-                </form>
-            </div>
-        </div>
-    {% endif %}
-    </div>
-
+    <div id="newpost"></div>
     <div id="profile"></div>
     <div id="posts"></div>
 

@@ -12,26 +12,25 @@ def index(request):
     return render(request, "network/index.html")
 
 def posts(request):
-    user = request.user
     follow = request.GET.get('following')
     username = request.GET.get('profile')
 
     if username:
         posts = Post.objects.order_by("-timestamp").filter(user=User.objects.get(username=username))
-    elif follow and user.is_authenticated:
-        posts = Post.objects.order_by("-timestamp").filter(user__in=user.following.all())
+    elif follow:
+        posts = Post.objects.order_by("-timestamp").filter(user__in=request.user.following.all())
     else:
         posts = Post.objects.order_by("-timestamp").all()
 
     pages = Paginator(posts, 10)
     num = request.GET.get('page')
     obj = pages.page(num)
-    page = {'previous': obj.has_previous(), 'next': obj.has_next(), 'number': obj.number, 'loged': user.is_authenticated }
+    page = {'previous': obj.has_previous(), 'next': obj.has_next(), 'number': obj.number, 'logged': request.user.is_authenticated}
     data = []
     for post in obj:
         save = post.serialize()
-        save.update(like = post.like(user))
-        save.update(author = post.user == user)
+        save.update(like = post.like(request.user))
+        save.update(author = post.user == request.user)
         data.append(save)
     return JsonResponse([data, page], safe=False)
 
@@ -88,12 +87,15 @@ def register(request):
 
 
 def new(request):
-    if request.user.is_authenticated:
-        if request.method == "POST":
-            data = json.loads(request.body)
-            if body := data["body"].strip():
-                Post.objects.create(user=request.user,content=body)
-                return JsonResponse({"message": "Post created successfully."}, status=201)
+    if request.method == "GET":
+        return JsonResponse({"logged": request.user.is_authenticated})
+
+    if request.method == "POST":
+        body = json.loads(request.body)["body"].strip()
+        if body:
+            Post.objects.create(user=request.user,content=body)
+            return JsonResponse({"message": "Post created successfully."}, status=201)
+
     return JsonResponse({"error": "Bad Request"}, status=400)
 
 
@@ -130,11 +132,13 @@ def edit(request):
 def profile(request):
     username = request.GET.get('username')
     user = User.objects.get(username=username)
-    followers = user.followers.count()
-    following = user.following.count()
-    follow = request.user in user.followers.all()
-    valid = not request.user == user and request.user.is_authenticated
-    data = {'followers': followers, 'following': following, 'follow': follow, 'valid': valid}
+    data = {
+        'followers': user.followers.count(),
+        'following': user.following.count(),
+        'holder': request.user == user,
+        'logged': request.user.is_authenticated,
+        'follow': request.user in user.followers.all()
+    }
     return JsonResponse(data)
 
 def follow(request):
